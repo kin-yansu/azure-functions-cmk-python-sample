@@ -123,7 +123,7 @@ API_URL=$(app_output functionUrl)
 PACKAGE="$(pwd)/function-package.zip"
 (cd app && zip -q "$PACKAGE" function_app.py host.json requirements.txt)
 az functionapp deployment source config-zip \
-  --resource-group "$RG" --name "$APP_NAME" --src "$PACKAGE"
+  --resource-group "$RG" --name "$APP_NAME" --src "$PACKAGE" --build-remote true
 ```
 
 Python 依存関係は Azure CLI のリモートビルドで解決します。Azure 側でパッケージ取得を制限している場合は、承認済みの配布元または Linux で依存関係を同梱したパッケージを使用してください。
