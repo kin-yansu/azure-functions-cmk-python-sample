@@ -45,6 +45,7 @@ param apiAudience string = apiClientId
 param callerPrincipalId string
 
 var suffix = uniqueString(resourceGroup().id)
+var allowedPublicIp = '59.136.249.169/32'
 var appName = 'func-cmk-poc-${suffix}'
 var deploymentContainerName = 'function-packages'
 var documentContainerName = 'documents'
@@ -165,7 +166,7 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
   properties: {
     serverFarmId: plan.id
     virtualNetworkSubnetId: integrationSubnetId
-    publicNetworkAccess: 'Disabled'
+    publicNetworkAccess: 'Enabled'
     httpsOnly: true
     functionAppConfig: {
       runtime: {
@@ -189,6 +190,17 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
     }
     siteConfig: {
       minTlsVersion: '1.2'
+      ipSecurityRestrictionsDefaultAction: 'Deny'
+      ipSecurityRestrictions: [
+        {
+          name: 'AllowPrototypeClient'
+          ipAddress: allowedPublicIp
+          action: 'Allow'
+          priority: 100
+        }
+      ]
+      // 初回のコード配布も PoC 端末から行えるよう、同じ IP 制限を使う。
+      scmIpSecurityRestrictionsUseMain: true
       appSettings: [
         {
           name: 'AzureWebJobsStorage__accountName'
