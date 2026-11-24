@@ -19,35 +19,40 @@ resource network 'Microsoft.Network/virtualNetworks@2024-05-01' = {
         '10.0.0.0/24'
       ]
     }
-  }
-}
-
-resource integrationSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' = {
-  name: 'snet-flex'
-  parent: network
-  properties: {
-    addressPrefix: '10.0.0.0/27'
-    delegations: [
+    subnets: [
       {
-        name: 'flex'
+        name: 'snet-flex'
         properties: {
-          serviceName: 'Microsoft.App/environments'
+          addressPrefix: '10.0.0.0/27'
+          delegations: [
+            {
+              name: 'flex'
+              properties: {
+                serviceName: 'Microsoft.App/environments'
+              }
+            }
+          ]
+        }
+      }
+      {
+        name: 'snet-private-endpoints'
+        properties: {
+          addressPrefix: '10.0.0.32/27'
+          privateEndpointNetworkPolicies: 'Disabled'
         }
       }
     ]
   }
 }
 
-resource endpointSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' = {
+resource integrationSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' existing = {
+  name: 'snet-flex'
+  parent: network
+}
+
+resource endpointSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' existing = {
   name: 'snet-private-endpoints'
   parent: network
-  properties: {
-    addressPrefix: '10.0.0.32/27'
-    privateEndpointNetworkPolicies: 'Disabled'
-  }
-  dependsOn: [
-    integrationSubnet
-  ]
 }
 
 resource zones 'Microsoft.Network/privateDnsZones@2024-06-01' = [for zoneName in privateDnsNames: {
@@ -110,6 +115,9 @@ resource hsmEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
       }
     ]
   }
+  dependsOn: [
+    network
+  ]
 }
 
 resource hsmDns 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2024-05-01' = {
